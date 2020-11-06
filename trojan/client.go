@@ -13,11 +13,11 @@ var clientPath = "/root/config.json"
 func GenClientJson() {
 	fmt.Println()
 	var user core.User
-	domain := GetDomain()
+	domain, port := GetDomainAndPort()
 	mysql := core.GetMysql()
-	userList := mysql.GetData()
-	if userList == nil {
-		fmt.Println("连接mysql失败!")
+	userList, err := mysql.GetData()
+	if err != nil {
+		fmt.Println(err.Error())
 		return
 	}
 	if len(userList) == 1 {
@@ -35,7 +35,7 @@ func GenClientJson() {
 		fmt.Println(util.Red("Base64解码失败: " + err.Error()))
 		return
 	}
-	if !core.WriteClient(string(pass), domain, clientPath) {
+	if !core.WriteClient(port, string(pass), domain, clientPath) {
 		fmt.Println(util.Red("生成配置文件失败!"))
 	} else {
 		fmt.Println("成功生成配置文件: " + util.Green(clientPath))

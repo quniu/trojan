@@ -13,7 +13,7 @@ func UserList(findUser string) *ResponseBody {
 	responseBody := ResponseBody{Msg: "success"}
 	defer TimeCost(time.Now(), &responseBody)
 	mysql := core.GetMysql()
-	userList := mysql.GetData()
+	userList, err := mysql.GetData()
 	if findUser != "" {
 		for _, user := range userList {
 			if user.Username == findUser {
@@ -22,13 +22,14 @@ func UserList(findUser string) *ResponseBody {
 			}
 		}
 	}
-	if userList == nil {
-		responseBody.Msg = "连接mysql失败!"
+	if err != nil {
+		responseBody.Msg = err.Error()
 		return &responseBody
 	}
-	domain := trojan.GetDomain()
+	domain, port := trojan.GetDomainAndPort()
 	responseBody.Data = map[string]interface{}{
 		"domain":   domain,
+		"port":     port,
 		"userList": userList,
 	}
 	return &responseBody
@@ -39,14 +40,15 @@ func PageUserList(curPage int, pageSize int) *ResponseBody {
 	responseBody := ResponseBody{Msg: "success"}
 	defer TimeCost(time.Now(), &responseBody)
 	mysql := core.GetMysql()
-	pageData := mysql.PageList(curPage, pageSize)
-	if pageData == nil {
-		responseBody.Msg = "连接mysql失败!"
+	pageData, err := mysql.PageList(curPage, pageSize)
+	if err != nil {
+		responseBody.Msg = err.Error()
 		return &responseBody
 	}
-	domain := trojan.GetDomain()
+	domain, port := trojan.GetDomainAndPort()
 	responseBody.Data = map[string]interface{}{
 		"domain":   domain,
+		"port":     port,
 		"pageData": pageData,
 	}
 	return &responseBody
@@ -89,9 +91,9 @@ func UpdateUser(id uint, username string, password string) *ResponseBody {
 		return &responseBody
 	}
 	mysql := core.GetMysql()
-	userList := mysql.GetData(strconv.Itoa(int(id)))
-	if userList == nil {
-		responseBody.Msg = "can't connect mysql"
+	userList, err := mysql.GetData(strconv.Itoa(int(id)))
+	if err != nil {
+		responseBody.Msg = err.Error()
 		return &responseBody
 	}
 	if userList[0].Username != username {
